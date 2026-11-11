@@ -39,12 +39,16 @@ jobs:
         id: feed
         continue-on-error: true
         run: npm run update:indicative
-      - name: Bewaar geldige koersdata en demo-observaties
-        if: steps.feed.outcome == 'success'
+      - name: Maak de Amerikaanse premarket-radar
+        id: radar
+        continue-on-error: true
+        run: node scripts/update_stock_radar.mjs
+      - name: Bewaar koersdata en aandelenradar
+        if: steps.feed.outcome == 'success' || steps.radar.outcome == 'success'
         run: |
           git config user.name "trading-company-bot"
           git config user.email "trading-company-bot@users.noreply.github.com"
-          git add docs/data/latest.json docs/data/observations.json
+          git add docs/data/latest.json docs/data/observations.json docs/data/stock-radar.json
           if ! git diff --cached --quiet; then
             git commit -m "Update gold snapshots"
             for attempt in 1 2 3; do
