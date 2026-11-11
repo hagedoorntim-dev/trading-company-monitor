@@ -3,6 +3,13 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '*/15 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'lib/**'
+      - 'package.json'
+      - '.github/workflows/market-monitor.yml'
 permissions:
   contents: write
   pages: write
@@ -44,3 +51,11 @@ jobs:
           path: docs
       - name: Publish GitHub Pages
         uses: actions/deploy-pages@v4
+
+      - name: Controleer of de koersvernieuwing werkelijk slaagde
+        if: always()
+        run: |
+          if [ "${{ steps.feed.outcome }}" != "success" ]; then
+            echo "::error::De website kan gepubliceerd zijn, maar de koersfeed is niet bijgewerkt."
+            exit 1
+          fi
