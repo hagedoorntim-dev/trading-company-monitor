@@ -32,12 +32,10 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verify analysis safety rules
         run: npm test
-      - name: Alternatieve openbare koersbronnen testen
-        run: node scripts/probe_market_sources.mjs
-      - name: Nieuwe koersdata ophalen
+      - name: Actuele indicatieve goudkoersen ophalen
         id: feed
         continue-on-error: true
-        run: npm run update
+        run: npm run update:indicative
       - name: Bewaar geldige koersdata en demo-observaties
         if: steps.feed.outcome == 'success'
         run: |
