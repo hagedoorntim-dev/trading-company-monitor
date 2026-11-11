@@ -1,0 +1,44 @@
+name: Trading Company koersmonitor
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: trading-company-feed
+  cancel-in-progress: false
+jobs:
+  refresh_and_publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dependencies
+        run: npm install --no-audit --no-fund
+      - name: Nieuwe koersdata ophalen
+        id: feed
+        continue-on-error: true
+        run: npm run update
+      - name: Bewaar geldige koersdata en demo-observaties
+        if: steps.feed.outcome == 'success'
+        run: |
+          git config user.name "trading-company-bot"
+          git config user.email "trading-company-bot@users.noreply.github.com"
+          git add docs/data/latest.json docs/data/observations.json
+          git diff --cached --quiet || (git commit -m "Update gold snapshots" && git push)
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Publish GitHub Pages
+        uses: actions/deploy-pages@v4
