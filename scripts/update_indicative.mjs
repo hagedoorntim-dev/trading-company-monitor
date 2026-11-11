@@ -15,12 +15,6 @@ function normalize(result,span){
   })).filter(x=>finite(x.t)&&finite(x.o)&&finite(x.h)&&finite(x.l)&&finite(x.c)&&x.o>0&&x.h>=Math.max(x.o,x.c)&&x.l<=Math.min(x.o,x.c)&&x.h>=x.l&&x.t+span<=now-3000).sort((a,b)=>a.t-b.t).filter((x,i,arr)=>i===0||x.t!==arr[i-1].t);
   return bars;
 }
-function tickTime(t){
-  if(typeof t!=='string')return NaN;
-  // Some MT5 providers return YYYY.MM.DD HH:mm:ss in UTC rather than ISO.
-  const m=t.match(/^(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
-  return Date.parse(m?m.slice(1).map((x,i)=>i<3?x:x).join(''):t); // replaced below if MT5 format
-}
 function quoteTime(t){
  if(!t||typeof t!=='string')return NaN;
  const m=/^(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/.exec(t);
@@ -38,8 +32,8 @@ async function main(){
  const ageQuote=now-quoteTime(tick.time);
  if(age5<0||age5>15*60000||age1<0||age1>75*60000||!Number.isFinite(ageQuote)||ageQuote< -5*60000||ageQuote>15*60000)throw Error('Stale/invalid source '+JSON.stringify({age5,age1,ageQuote,tickTime:tick.time}));
  if(Math.abs((bid+ask)/2-m5.at(-1).c)>Math.max(25,bid*0.01))throw Error('Tick inconsistent with latest M5 candle');
- const data={schema:4,status:'indicative',source:'biquote / '+String(tick.source||'MT5')+' (NIET Pepperstone)',source_kind:'mid_ohlc_plus_latest_bid_ask_only',
-  warning:'OHLC-midkoersen; geen historische BID/ASK-kaarsen. Automatisch handelssignaal geblokkeerd.',
+ const data={schema:4,status:'indicative',source:'biquote / '+String(tick.source||'MT5')+' (NIET Pepperstone)',source_kind:'ohlc_without_individual_bid_ask_plus_latest_quote',
+  warning:'OHLC-koersen zonder afzonderlijke BID/ASK-zijden; alleen de actuele quote bevat BID/ASK. Handelssignalen blijven uitgeschakeld.',
   fetched_at_utc:new Date(now).toISOString(),instrument:'XAUUSD',
   quote:{bid,ask,at_raw:tick.time,at_utc:new Date(quoteTime(tick.time)).toISOString()},
   indicative_5m:m5.slice(-170),indicative_1h:h1.slice(-120),candles_5m:[],candles_1h:[]};
