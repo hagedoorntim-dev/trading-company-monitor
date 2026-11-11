@@ -32,6 +32,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verify analysis safety rules
         run: npm test
+      - name: Alternatieve openbare koersbronnen testen
+        run: node scripts/probe_market_sources.mjs
       - name: Nieuwe koersdata ophalen
         id: feed
         continue-on-error: true
