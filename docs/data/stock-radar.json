@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "generated_at_utc": null,
+  "market_date_ny": null,
+  "source": "StockAnalysis.com",
+  "source_url": "https://stockanalysis.com/markets/premarket/",
+  "status": "no_data",
+  "candidates": [],
+  "note": "Nog geen automatische premarket-scan uitgevoerd. Geen marktgegevens beschikbaar."
+}
