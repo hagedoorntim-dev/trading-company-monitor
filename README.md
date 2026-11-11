@@ -1,17 +1,27 @@
-# Trading Company — automatische goudmonitor
+# Trading Company — Goudmonitor
 
-**Status:** onderzoek / demo. Geen live-orders. XAU/USD BID/ASK-data via Dukascopy; kan afwijken van TradingView Pepperstone en Plus500.
+Open dashboard: **https://hagedoorntim-dev.github.io/trading-company-monitor/**
 
-## Inhoud
-- `docs/index.html`: dashboard (5 minuten en 1 uur, EMA20/50, trendstatus, koersactualiteit).
-- `scripts/update_data.mjs`: haalt recente Dukascopy BID/ASK-koersen op en bewaart een demo-oordeel.
-- `.github/workflows/market-monitor.yml`: geplande updates en GitHub Pages-publicatie.
-- `docs/data/latest.json`: beginstatus; verschijnt als **GEEN LIVE-DATA** tot een succesvolle update.
+## Huidige status
 
-## Activeren
-1. Ga naar **Settings → Pages → Build and deployment → Source** en kies **GitHub Actions**.
-2. Ga naar **Actions → Trading Company koersmonitor → Run workflow** (nadat de bestanden zijn toegevoegd).
-3. Controleer of `npm run update` slaagt en de pagina een recente **laatst afgesloten 5m-kaars** toont. Bij verouderde data geeft het dashboard **WACHTEN**.
-4. Vergelijk actuele koersen met TradingView; verschillen tussen aanbieders zijn normaal. 
+De website en de automatische GitHub Actions-update werken. Een geplande update draait doorgaans eens per 15 minuten, maar GitHub kan geplande taken vertragen.
 
-> Het gaat om een experimentele onderzoeksmonitor, niet om een gevalideerd handelsadvies. De automatische taak draait in principe ieder kwartier, maar GitHub Actions heeft geen gegarandeerd tijdschema. De data en de demo-log zijn **openbaar** in deze publieke repository.
+De gebruikte bron is momenteel **biquote / een MetaTrader 5-bron**. De openbare API biedt recente XAU/USD OHLC-koersen op 5 minuten en 1 uur, plus een actuele BID/ASK-quote. De OHLC-kaarsen bevatten **geen afzonderlijke BID/ASK-zijden**; bovendien zijn dit geen Pepperstone- of Plus500-koersen.
+
+**Daarom blijft elk handelssignaal geblokkeerd: WACHTEN.** De trends en EMA-lijnen zijn uitsluitend een indicatieve weergave. Er worden geen orders geplaatst en er wordt nog geen win/verlies per tradesignaal bijgehouden.
+
+## Techniek
+
+- `docs/index.html`: openbaar webdashboard (5m/1h, EMA20/EMA50, quote, status).
+- `scripts/update_indicative.mjs`: actuele quote en OHLC; publiceert **alleen** als de validaties voor juistheid en actualiteit slagen.
+- `lib/analysis.mjs`: deterministische proefregels voor toekomstige BID/ASK-data; zijn nu **niet actief**.
+- `scripts/update_data.mjs`: eerdere Dukascopy-proef. Momenteel niet gepland; Dukascopy gaf vanaf GitHub HTTP 202/AWS WAF-antwoorden.
+- `docs/data/latest.json`: recentste validatie; altijd controleren op `status`, `fetched_at_utc` en laatste afgesloten kaars.
+- `docs/data/observations.json`: uitsluitend voor toekomstige gevalideerde demoresultaten.
+- `.github/workflows/market-monitor.yml`: herhaalde update, test en publicatie.
+
+## Handelssignalen opnieuw inschakelen
+
+Pas nadat een betrouwbare broker- of prijs-API afzonderlijke historische BID/ASK-kaarsen levert, hebben we genoeg gegevens om de regels te testen op uitvoering, spread en slippage. Tot dat moment blijft de beslismodule vergrendeld.
+
+**Geen werkelijk handelsadvies. Alleen onderzoek en visualisatie.**
