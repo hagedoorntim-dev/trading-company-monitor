@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { evaluateDirection, recordDaily, evaluateAfterHour } from '../lib/research.mjs';
 const BASE='https://biquote.io/api/XAUUSD';
 const now=Date.now();
 const number=x=>Number(x);
@@ -37,7 +38,22 @@ async function main(){
   fetched_at_utc:new Date(now).toISOString(),instrument:'XAUUSD',
   quote:{bid,ask,at_raw:tick.time,at_utc:new Date(quoteTime(tick.time)).toISOString()},
   indicative_5m:m5.slice(-170),indicative_1h:h1.slice(-120),candles_5m:[],candles_1h:[]};
+ const assessment=evaluateDirection(data,now);
+ data.research=assessment;
+ const logFile='docs/data/observations.json';
+ let log;
+ try{
+   const existing=JSON.parse(await fs.readFile(logFile,'utf8'));
+   if(!Array.isArray(existing))throw Error('Observations must be an array');
+   log=existing;
+ }catch(err){
+   if(err?.code==='ENOENT')log=[];
+   else throw new Error('Cannot safely read observations: '+err.message);
+ }
+ evaluateAfterHour(log,data,now);
+ recordDaily(log,assessment,now);
+ await fs.writeFile(logFile,JSON.stringify(log.slice(-500),null,2));
  await fs.writeFile('docs/data/latest.json',JSON.stringify(data));
- console.log('INDICATIEVE MARKTDATA OK',JSON.stringify({quote:data.quote,m5:m5.length,h1:h1.length,lastM5:new Date(m5.at(-1).t).toISOString(),lastH1:new Date(h1.at(-1).t).toISOString(),age5min:age5/60000,ageH1min:age1/60000}));
+ console.log('INDICATIEVE MARKTDATA OK',JSON.stringify({quote:data.quote,m5:m5.length,h1:h1.length,lastM5:new Date(m5.at(-1).t).toISOString(),lastH1:new Date(h1.at(-1).t).toISOString(),age5min:age5/60000,ageH1min:age1/60000,researchSignal:assessment.signal,observations:log.length}));
 }
 main().catch(e=>{console.error('GEEN INDICATIEVE MARKTDATA:',e?.stack||e);process.exitCode=1});
