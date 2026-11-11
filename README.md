@@ -27,3 +27,18 @@ De gebruikte bron is momenteel **biquote / een MetaTrader 5-bron**. De openbare 
 Pas nadat een betrouwbare broker- of prijs-API afzonderlijke historische BID/ASK-kaarsen levert, hebben we genoeg gegevens om de regels te testen op uitvoering, spread en slippage. Tot dat moment blijft de beslismodule vergrendeld.
 
 **Geen werkelijk handelsadvies. Alleen onderzoek en visualisatie.**
+
+## US Stock Momentum Radar (v0.5)
+
+De radar staat in hetzelfde dashboard als de goudmonitor: https://hagedoorntim-dev.github.io/trading-company-monitor/
+
+- GitHub Actions probeert elke 15 minuten scripts/update_stock_radar.mjs uit te voeren; alleen tussen 08:50 en 09:29 New Yorkse tijd op werkdagen wordt een nieuwe premarket-snapshot gemaakt.
+- De scanner gebruikt openbare premarket-overzichten op StockAnalysis.com en optionele verwijzingen naar recente nieuwsresultaten. De bron kan onbeschikbaar zijn of structuur wijzigen. In dat geval publiceert hij geen verzonnen cijfers en toont het dashboard expliciet GEEN ACTUELE RADAR.
+- Filtervoorwaarden: premarketkoers tussen $5 en $300, volume minimaal 40.000 aandelen, marktkapitalisatie minimaal $250 miljoen, absolute premarket-beweging tussen 2% en 35%. Dit zijn onderzoeksfilters, geen uitvoerbaarheidsbewijs. Maximaal 10 kandidaten.
+- Kandidaten zijn LONG-WATCH of SHORT-WATCH, uitsluitend gebaseerd op de richting van de premarket-beweging. Dit zijn geen BUY/SELL-signalen. De spread en nieuwsinhoud zijn niet onafhankelijk bevestigd.
+- Het dashboard vermeldt de beursdatum en scantijd. Vorige-daggegevens worden als verouderd gemarkeerd. De vaste tech-volglijst biedt links naar grafieken maar bevat geen verzonnen aanbevelingen.
+- Het radarbestand is docs/data/stock-radar.json; de code is lib/stock-radar.mjs, scripts/update_stock_radar.mjs en tests/stock-radar.test.mjs. De scanner wordt door .github/workflows/market-monitor.yml opgeroepen.
+- De ChatGPT-taak voor dagelijkse radarberichten is gepauzeerd. Alleen het GitHub-dashboard kan deze data tonen. Er zijn geen brokerorders en geen pushmeldingen.
+
+Let op: geautomatiseerde bronophaling en publicatie worden pas operationeel bevestigd nadat een echte premarket-run in GitHub Actions is gelukt. De openbare bron is geen gegarandeerde marktdata-API en kan zonder waarschuwing weigeren of veranderen.
+
