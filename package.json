@@ -1,0 +1,1 @@
+{"name":"trading-company-monitor","version":"0.3.0","private":true,"type":"module","scripts":{"update":"node scripts/update_data.mjs","test":"node --test tests/*.test.mjs"},"dependencies":{"dukascopy-node":"1.50.0"}}
