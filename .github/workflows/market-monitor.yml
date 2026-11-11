@@ -23,6 +23,8 @@ jobs:
           node-version: '22'
       - name: Dependencies
         run: npm install --no-audit --no-fund
+      - name: Verify analysis safety rules
+        run: npm test
       - name: Nieuwe koersdata ophalen
         id: feed
         continue-on-error: true
