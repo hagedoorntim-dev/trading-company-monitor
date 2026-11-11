@@ -45,7 +45,13 @@ function draw(z){
  ctx.font='11px sans-serif';ctx.lineWidth=1;
  for(let k=0;k<6;k++){let p=lo+(hi-lo)*k/5,y=fy(p);ctx.strokeStyle='#253349';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillStyle='#8ca0b4';ctx.fillText(fmt(p),right+8,y+3)}
  let values=a.map(cl),e20=ema(values,20),e50=ema(values,50);
- for(let i=0;i<a.length;i++){const q=a[i],x=fx(i),color=cl(q)>=o(q)?'#42caa5':'#f26e77';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(x,fy(hiOf(q)));ctx.lineTo(x,fy(loOf(q)));ctx.stroke();ctx.fillRect(x-1.5,Math.min(fy(o(q)),fy(cl(q))),Math.max(2,(right-left)/a.length*.5),Math.max(1.5,Math.abs(fy(cl(q))-fy(o(q))))}
+ for(let i=0;i<a.length;i++){
+  const q=a[i],x=fx(i),up=cl(q)>=o(q),color=up?'#42caa5':'#f26e77';
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.beginPath();
+  ctx.moveTo(x,fy(hiOf(q)));ctx.lineTo(x,fy(loOf(q)));ctx.stroke();
+  const candleWidth=Math.max(2,(right-left)/a.length*.5),candleHeight=Math.max(1.5,Math.abs(fy(cl(q))-fy(o(q))));
+  ctx.fillRect(x-1.5,Math.min(fy(o(q)),fy(cl(q))),candleWidth,candleHeight);
+ }
  for(const [es,color] of [[e20,'#f8cf54'],[e50,'#75a6ff']]){ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();let started=false;for(let i=0;i<es.length;i++){if(es[i]===null)continue;if(!started){ctx.moveTo(fx(i),fy(es[i]));started=true}else ctx.lineTo(fx(i),fy(es[i]))}ctx.stroke()}
 }
 async function reload(){try{const r=await fetch('data/latest.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);feed=await r.json();const q=await fetch('data/observations.json?ts='+Date.now(),{cache:'no-store'});observations=q.ok?await q.json():[];const tbody=$('log');tbody.textContent='';if(!Array.isArray(observations)||!observations.length){tbody.innerHTML='<tr><td colspan="5">Nog geen vastgelegde demobeoordelingen</td></tr>';}else for(const o of observations.slice(-12).reverse()){const tr=document.createElement('tr');for(const s of [o.day,o.at_utc,o.signal,fmt(o.entry_mid),o.evaluation?.move_usd!=null?fmt(o.evaluation.move_usd,3)+' USD':'Nog niet geëvalueerd']){let td=document.createElement('td');td.textContent=s??'—';tr.append(td)}tbody.append(tr)}show()}catch(e){feed={status:'no_data',candles_5m:[],candles_1h:[]};$('statusLine').textContent='Feed niet bereikbaar: '+e.message+' — WACHTEN';show()}}
