@@ -9,6 +9,7 @@ on:
       - 'scripts/**'
       - 'lib/**'
       - 'package.json'
+      - 'docs/index.html'
       - '.github/workflows/market-monitor.yml'
 permissions:
   contents: write
@@ -32,6 +33,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verify analysis safety rules
         run: npm test
+      - name: Check dashboard JavaScript syntax
+        run: node -e "const fs=require('fs'); const h=fs.readFileSync('docs/index.html','utf8'); const js=h.split('<script>')[1].split('</script>')[0]; new Function(js); console.log('Dashboard JavaScript parsed successfully')"
       - name: Actuele indicatieve goudkoersen ophalen
         id: feed
         continue-on-error: true
