@@ -1,11 +1,15 @@
 <!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trading Company | Marktmonitor</title><style>
 :root{color-scheme:dark;font:14px Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#0c121c;color:#e8f0fb}*{box-sizing:border-box}body{margin:0}header{padding:20px 25px;border-bottom:1px solid #283447;background:#111c2b;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}h1{font-size:20px;margin:0}small,.dim{color:#9db0c6}.mark{font-weight:700;color:#74caa7;font-size:12px;letter-spacing:1.6px}main{max-width:1420px;margin:0 auto;padding:24px;display:grid;gap:18px}.panel{background:#142030;border:1px solid #29384d;border-radius:15px;padding:19px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.metric strong{font-size:23px;display:block;margin:8px 0}.metric span{font-size:12px;color:#a9bbce}.layout{display:grid;grid-template-columns:2fr 1fr;gap:18px}.hero{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.signal{font-weight:800;font-size:28px}.wait{color:#ffcf78}.buy{color:#6de0ad}.sell{color:#ff8093}.buttons{display:flex;gap:8px}.buttons button,button{border:1px solid #3a5068;background:#192d42;color:#eaf3ff;border-radius:8px;padding:8px 12px;cursor:pointer}.buttons button.active{background:#28516b;border-color:#63a6da}.chart{display:block;width:100%;height:440px;background:#0d1724;border-radius:10px;margin-top:14px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fields div{padding:10px;background:#101b2a;border-radius:8px}.fields b{display:block;font-size:16px;margin-top:3px}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #2b3b4e;font-size:12px}th{color:#9db2c8}#statusLine{padding:10px 14px;background:#382919;border:1px solid #745333;border-radius:9px;color:#ffdc91}p{line-height:1.55}footer{color:#8ca0b4;font-size:12px;padding:12px 24px 24px;text-align:center}@media(max-width:800px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:12px}.chart{height:320px}}</style></head><body>
-<header><div><div class="mark">TRADING COMPANY · RESEARCH LAB</div><h1>Goudmonitor <small>v0.3 — DEMO</small></h1></div><div><span id="fetched" class="dim">Nog geen live-feed</span> &nbsp; <button onclick="reload()">Vernieuwen</button></div></header>
+<header><div><div class="mark">TRADING COMPANY · RESEARCH LAB</div><h1>Goudmonitor <small>v0.4 — ONDERZOEK</small></h1></div><div><span id="fetched" class="dim">Nog geen live-feed</span> &nbsp; <button onclick="reload()">Vernieuwen</button></div></header>
 <main><div id="statusLine">Gegevens ophalen…</div>
-<section class="metrics"><div class="panel metric"><span>Laatste gesloten XAU/USD mid</span><strong id="price">—</strong><span id="spread">Spread: —</span></div><div class="panel metric"><span>5-minutentrend</span><strong id="trend5">—</strong><span>EMA 20 / 50</span></div><div class="panel metric"><span>1-uurtrend</span><strong id="trend1">—</strong><span>Alleen gesloten uurkaarsen</span></div><div class="panel metric"><span>Actueel oordeel</span><strong id="signal" class="wait">WACHTEN</strong><span>Geen automatische orders</span></div></section>
+<section class="metrics"><div class="panel metric"><span>Laatste gesloten XAU/USD mid</span><strong id="price">—</strong><span id="spread">Spread: —</span></div><div class="panel metric"><span>5-minutentrend</span><strong id="trend5">—</strong><span>EMA 20 / 50</span></div><div class="panel metric"><span>1-uurtrend</span><strong id="trend1">—</strong><span>Alleen gesloten uurkaarsen</span></div><div class="panel metric"><span>Handelsstatus</span><strong id="signal" class="wait">WACHTEN</strong><span>Geen automatische orders</span></div></section>
 <div class="layout"><div class="panel"><div class="hero"><div><h2 style="margin:0">XAU/USD — koersgrafiek</h2><small id="lastCandle">—</small></div><div class="buttons"><button id="b5" class="active" onclick="choose('5m')">5 minuten</button><button id="b1" onclick="choose('1h')">1 uur</button></div></div><canvas id="chart" class="chart"></canvas><small>Groen/rood: koerskaarsen · geel: EMA 20 · blauw: EMA 50. Bij indicatieve data: OHLC-koersen zonder BID/ASK-zijden, geen echte BID/ASK-kaarsen.</small></div>
 <div class="panel"><h2 style="margin-top:0">Beoordeling</h2><p id="reason" class="dim">Nog geen feed.</p><div class="fields"><div><small>EMA 20 (5m)</small><b id="ema20">—</b></div><div><small>EMA 50 (5m)</small><b id="ema50">—</b></div><div><small>ATR 14</small><b id="atr">—</b></div><div><small>Koersgegevens</small><b id="fresh">Niet actueel</b></div><div><small>Proefstop</small><b id="stop">—</b></div><div><small>Proefdoel</small><b id="target">—</b></div></div><p class="dim">Onze regels zijn experimenteel en nog niet bewezen winstgevend. WACHTEN wordt verplicht bij oude of onvolledige data.</p></div></div>
-<section class="panel"><h2 style="margin-top:0">Automatisch onderzoekslogboek</h2><p class="dim">Een demobeoordeling wordt pas opgeslagen als onafhankelijke BID/ASK-kaarsdata is gevalideerd. Indicatieve koersgrafieken geven GEEN handelsadvies.</p><div style="overflow-x:auto"><table><thead><tr><th>Datum</th><th>Tijdstip UTC</th><th>Oordeel</th><th>Referentiekoers</th><th>Resultaat</th></tr></thead><tbody id="log"><tr><td colspan="5">Nog geen registraties</td></tr></tbody></table></div></section></main><footer>Research only. Geen brokerkoppeling of orders. GitHub Actions is niet gegarandeerd realtime. Controleer signaal en actualiteit voor iedere beslissing.</footer>
+<section class="panel"><div class="hero"><div><h2 style="margin:0">Onderzoeksrichting — géén handelsadvies</h2><small>EMA 20/50, 5m en 1h, uitsluitend afgesloten kaarsen</small></div><strong id="researchSignal" class="signal wait">—</strong></div>
+<p id="researchReason" class="dim">De eerste automatische onderzoeksmeting wordt geladen.</p>
+<div class="fields" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><small>Laatste observatie</small><b id="researchLast">—</b></div><div><small>Beoordeeld na 60 min</small><b id="researchEvaluated">0</b></div><div><small>Gem. richtingbeweging</small><b id="researchAvg">—</b></div></div>
+<p class="dim">De richting BUY of SELL is uitsluitend een vooraf vastgelegde hypothese. De evaluatie meet de verandering van de indicatieve goudkoers in USD per troy ounce, zonder spread, slippage, positieomvang of financiering. Een WACHTEN-oordeel telt niet als gewonnen trade.</p></section>
+<section class="panel"><h2 style="margin-top:0">Automatisch onderzoekslogboek</h2><p class="dim">Rond 13:00 uur Nederlandse tijd registreert de monitor één indicatieve markthypothese op werkdagen. Na een uur wordt alleen de koersbeweging gemeten. Geen echte transacties, nettoresultaten of gegarandeerde signalen.</p><div style="overflow-x:auto"><table><thead><tr><th>Datum NL</th><th>Observatie</th><th>Onderzoeksoordeel</th><th>Slotkoers</th><th>Beweging na 60m</th></tr></thead><tbody id="log"><tr><td colspan="5">Nog geen registraties</td></tr></tbody></table></div></section></main><footer>Research only. Geen brokerkoppeling of orders. GitHub Actions is niet gegarandeerd realtime. Controleer signaal en actualiteit voor iedere beslissing.</footer>
 <script>
 let feed=null,observations=[],timeframe='5m';const $=id=>document.getElementById(id),fmt=(n,d=2)=>Number.isFinite(n)?n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const mid=x=>(x.bid[3]+x.ask[3])/2;const close=(arr,ms,now)=>Array.isArray(arr)?arr.filter(x=>x.t+ms<now-3000&&x.volume_bid+x.volume_ask>0&&x.ask[3]>=x.bid[3]):[];
@@ -54,5 +58,48 @@ function draw(z){
  }
  for(const [es,color] of [[e20,'#f8cf54'],[e50,'#75a6ff']]){ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();let started=false;for(let i=0;i<es.length;i++){if(es[i]===null)continue;if(!started){ctx.moveTo(fx(i),fy(es[i]));started=true}else ctx.lineTo(fx(i),fy(es[i]))}ctx.stroke()}
 }
-async function reload(){try{const r=await fetch('data/latest.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);feed=await r.json();const q=await fetch('data/observations.json?ts='+Date.now(),{cache:'no-store'});observations=q.ok?await q.json():[];const tbody=$('log');tbody.textContent='';if(!Array.isArray(observations)||!observations.length){tbody.innerHTML='<tr><td colspan="5">Nog geen vastgelegde demobeoordelingen</td></tr>';}else for(const o of observations.slice(-12).reverse()){const tr=document.createElement('tr');for(const s of [o.day,o.at_utc,o.signal,fmt(o.entry_mid),o.evaluation?.move_usd!=null?fmt(o.evaluation.move_usd,3)+' USD':'Nog niet geëvalueerd']){let td=document.createElement('td');td.textContent=s??'—';tr.append(td)}tbody.append(tr)}show()}catch(e){feed={status:'no_data',candles_5m:[],candles_1h:[]};$('statusLine').textContent='Feed niet bereikbaar: '+e.message+' — WACHTEN';show()}}
+function renderResearch(z){
+ const raw=feed?.research||{},now=Date.now(),fetchAge=now-Date.parse(feed?.fetched_at_utc||'');
+ const okay=z.indicative&&z.fresh&&raw.fresh&&fetchAge>=0&&fetchAge<17*60000;
+ const v=okay?(raw.signal||'WACHTEN'):'WACHTEN';
+ $('researchSignal').textContent=okay?v:'GEEN ACTUELE METING';
+ $('researchSignal').className='signal '+(v==='BUY'&&okay?'buy':v==='SELL'&&okay?'sell':'wait');
+ $('researchReason').textContent=okay?(raw.reason+' Laatste gebruikte 5m-kaars: '+new Date(raw.last_m5_close_utc).toLocaleString('nl-NL',{timeZone:'Europe/Amsterdam'})):'Geen actuele onderzoekshypothese. De laatste opgeslagen meting mag niet als live worden gelezen.';
+ const done=Array.isArray(observations)?observations.filter(x=>x.state==='evaluated'):[];
+ const directional=done.filter(x=>Number.isFinite(x.evaluation?.directional_move_usd_per_oz));
+ const sum=directional.reduce((a,x)=>a+x.evaluation.directional_move_usd_per_oz,0);
+ $('researchLast').textContent=observations?.length?new Date(observations.at(-1).observed_at_utc).toLocaleString('nl-NL',{timeZone:'Europe/Amsterdam'}):'Nog niet geregistreerd';
+ $('researchEvaluated').textContent=done.length+' / '+(observations?.length||0);
+ $('researchAvg').textContent=directional.length?(sum/directional.length>=0?'+':'')+fmt(sum/directional.length,3)+' USD/oz':'Nog geen steekproef';
+}
+async function reload(){
+ try{
+  const r=await fetch('data/latest.json?ts='+Date.now(),{cache:'no-store'});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  feed=await r.json();
+  const q=await fetch('data/observations.json?ts='+Date.now(),{cache:'no-store'});
+  observations=q.ok?await q.json():[];
+  if(!Array.isArray(observations))observations=[];
+  const tbody=$('log');tbody.textContent='';
+  if(!observations.length)tbody.innerHTML='<tr><td colspan="5">Nog geen 13:00-observaties. De eerste geldige registratie verschijnt automatisch op een werkdag.</td></tr>';
+  else for(const o of observations.slice(-20).reverse()){
+    const tr=document.createElement('tr');
+    const move=o.evaluation?.move_usd_per_oz;
+    const values=[o.date||o.day||'—',
+      o.observed_at_utc?new Date(o.observed_at_utc).toLocaleString('nl-NL',{timeZone:'Europe/Amsterdam'}):'—',
+      o.signal||'—',fmt(o.price_close),
+      o.state==='evaluated'&&Number.isFinite(move)?(move>=0?'+':'')+fmt(move,3)+' USD/oz':o.state==='pending'?'Nog niet gemeten':'Geen bruikbare data'];
+    for(const v of values){const td=document.createElement('td');td.textContent=v;tr.append(td)}
+    tbody.append(tr);
+  }
+  show();
+  renderResearch(calc());
+ }catch(e){
+   feed={status:'no_data',candles_5m:[],candles_1h:[]};
+   observations=[];
+   $('statusLine').textContent='Feed niet bereikbaar: '+e.message+' — WACHTEN';
+   show();
+   renderResearch(calc());
+ }
+}
 window.addEventListener('resize',()=>feed&&show());reload();setInterval(reload,60000);</script></body></html>
