@@ -153,7 +153,7 @@ function renderStockRadar(){
   const symbol=cell(tr,v.ticker+' · '+(v.name||'—'),'sym');
   const side=cell(tr,v.direction==='LONG-WATCH'?'LONG volgen':v.direction==='SHORT-WATCH'?'SHORT volgen':'NEUTRAAL',v.direction==='LONG-WATCH'?'radar-up':v.direction==='SHORT-WATCH'?'radar-down':'radar-unknown');
   cell(tr,Number.isFinite(v.gap_pct)?(v.gap_pct>=0?'+':'')+fmt(v.gap_pct,2)+'%':'—');
-  cell(tr,Number.isFinite(v.premarket_price)?'</script></body></html>+fmt(v.premarket_price,2):'—');
+  cell(tr,Number.isFinite(v.premarket_price)?'$'+fmt(v.premarket_price,2):'—');
   cell(tr,Number.isFinite(v.premarket_volume)?Math.round(v.premarket_volume).toLocaleString('nl-NL'):'—');
   const news=cell(tr,'','news');
   if(v.news?.url){
