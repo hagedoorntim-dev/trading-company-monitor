@@ -42,3 +42,10 @@ De radar staat in hetzelfde dashboard als de goudmonitor: https://hagedoorntim-d
 
 Let op: geautomatiseerde bronophaling en publicatie worden pas operationeel bevestigd nadat een echte premarket-run in GitHub Actions is gelukt. De openbare bron is geen gegarandeerde marktdata-API en kan zonder waarschuwing weigeren of veranderen.
 
+
+## B2 Regime Momentum (v0.6)
+
+- `docs/TradingCompany_B2_v1.pine`: M1 paper-detector, closed M5, big AlgoAlpha changes, HMA approximation, candle, relative chart volume, ATR regime, ER20, verified manual spread/calendar/risk controls. Default minimum 0.15 oz based on user-confirmed Plus500 amount; increment must be verified. Pine is not yet compiled in TradingView; chart volume and BID/ASK data differ from Dukascopy. No real orders.
+- `docs/index.html` / `docs/b2.js`: B2 status/checklist, risk calculator, official calendar snapshot verified 12 Nov 2026 (NFP/CPI/FOMC in December), TradingView market-news widget and primary-source links. Calendar snapshot is not a continuously verified feed. No broker/TradingView webhook. Dashboard B2 remains WACHTEN until validated M1 BID/ASK and comparable volume feed exist.
+- Broker candidate: Plus500 demo, 0.15 oz minimum confirmed earlier; spread $1.13 previously observed, not guaranteed. Verify order step, minimum stop, margin, actual spread, slippage, currency and overnight costs. No deployment verification or live fills claimed.
+- Existing premarket radar remains unchanged; its candidates are watchlist only, news verification required. No ChatGPT radar notifications.
