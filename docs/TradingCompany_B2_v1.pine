@@ -52,10 +52,12 @@ rel = a/close*10000/ref
 // Explicit verified spread snapshot from selected broker. No fake historical spread.
 spread = input.float(0.0,"BID/ASK spread USD per oz (actueel)",minval=0,step=0.01,group="Broker")
 spreadAt = input.time(timestamp("01 Jan 2020 00:00 +0000"),"Tijdstip gemeten spread",group="Broker")
-minOz = input.float(1.0,"Minimum ounces",minval=0.01,step=0.01,group="Broker")
-stepOz = input.float(1.0,"Stap ounces",minval=0.01,step=0.01,group="Broker")
+minOz = input.float(0.15,"Minimum ounces",minval=0.01,step=0.01,group="Broker")
+stepOz = input.float(0.15,"Stap ounces",minval=0.01,step=0.01,group="Broker")
 fx = input.float(0.0,"Actuele EUR/USD (USD per EUR)",minval=0,step=0.0001,group="Broker")
 verified = input.bool(false,"Brokercontract, quote en volume-bron gecontroleerd",group="Broker")
+freeMargin = input.float(0.0,"Actuele vrije margin EUR (5% goudmarge)",minval=0,group="Broker")
+minStop = input.float(0.0,"Minimale stopafstand USD/oz (broker)",minval=0,group="Broker")
 risk = input.float(5.0,"Gepland risico EUR",minval=0.1,maxval=5,group="Broker")
 slip = input.float(0.10,"Stop-slippage USD/oz",minval=0,step=0.01,group="Broker")
 fees = input.float(0.0,"Extra commissie retour USD (totale order)",minval=0,group="Broker")
@@ -70,9 +72,47 @@ covered = time_close>=timestamp("13 Nov 2026 00:00 +0000") and time_close<timest
 calendarFresh = calendarChecked and time_close>=calendarAt and time_close-calendarAt<=86400000
 quoteOK = spread>0 and fx>0 and time_close>=spreadAt and time_close-spreadAt<=5*60000 and verified
 planned = 3*a+slip+spread
-qty = quoteOK and planned>0 ? math.min(1.0,math.floor(math.max(0,risk*fx-fees)/planned/stepOz)*stepOz) : 0.0
+qty = quoteOK and planned>0 ? math.floor(math.min(1.0,math.max(0,risk*fx-fees)/planned)/stepOz)*stepOz : 0.0
 tech = barstate.isconfirmed and d!=0 and d*(close-e)>0 and t5==d and hs==d and strong and rv>=1.5 and rel>=1 and rel<=3 and er>=0.30
-eligible = tech and quoteOK and spread<=0.5*a and covered and calendarFresh and not news and not manualPause and qty>=minOz
+eligible = tech and quoteOK and spread<=0.5*a and covered and calendarFresh and not news and not manualPause and qty>=minOz and freeMargin>0 and qty*close*0.05/fx<=freeMargin and 3*a>=minStop
+// Research position state: pending entry on next M1 open; chart OHLC proxy, NOT executable bid/ask fills.
+// If a stop is crossed in the same bar, conservatively model it as hit; no actual order.
+var int paperPos = 0
+var int pending = 0
+var int pendingExit = 0
+var float pendingATR = na
+var float paperStop = na
+var float paperQty = na
+var float entryProxy = na
+bool opened = false
+bool closed = false
+if barstate.isconfirmed
+    if paperPos != 0 and pendingExit != 0
+        paperPos := 0
+        pendingExit := 0
+        paperStop := na
+        closed := true
+    if pending != 0 and paperPos == 0
+        // Reject missing next minute rather than assume a gap fill.
+        if time-time[1]==60000
+            paperPos := pending
+            entryProxy := open
+            paperStop := open-paperPos*3*pendingATR
+            opened := true
+        pending := 0
+    if paperPos != 0 and (paperPos==1 ? low<=paperStop : high>=paperStop)
+        paperPos := 0
+        paperStop := na
+        closed := true
+    if paperPos != 0 and d==-paperPos
+        pendingExit := 1
+    if eligible and (paperPos==0 or pendingExit!=0)
+        pending := d
+        pendingATR := a
+        paperQty := qty
+plot(paperPos!=0?paperStop:na,"Paper ATR-stop (OHLC proxy)",color=color.yellow,style=plot.style_linebr)
+plotshape(closed,title="Paper EXIT proxy",style=shape.xcross,location=location.abovebar,color=color.yellow,size=size.tiny)
+plotshape(opened,title="Paper entry next candle proxy",style=shape.circle,location=location.belowbar,color=color.blue,size=size.tiny)
 // Mark technical candidates separately from validated PAPER eligibility. No live orders or P&L claims.
 plot(e,"EMA50",color=color.orange)
 plot(h,"HMA50 (benadering)",color=hs==1?color.teal:color.red)
@@ -96,7 +136,7 @@ if barstate.islast
     f_row(8,"Nieuws",not covered or not calendarFresh?"ONBEKEND":news or manualPause?"BLOK":"Vrij")
     f_row(9,"Positie oz",quoteOK?str.tostring(qty,"0.00"):"ONBEKEND")
     f_row(10,"Bronpariteit","Nog te valideren")
-if eligible
+if eligible and pending != 0
     alert("B2 PAPER | "+syminfo.ticker+" | "+(d==1?"LONG":"SHORT")+" | oz "+str.tostring(qty)+" | ATR "+str.tostring(a)+" | volgende M1 open controleren; geen order",alert.freq_once_per_bar_close)
-if barstate.isconfirmed and d!=0
+if barstate.isconfirmed and pendingExit!=0
     alert("B2 EXIT CHECK | "+syminfo.ticker+" | grote pijl "+(d==1?"BUY":"SELL")+" | sluit tegengestelde paperpositie op volgende M1; stop blijft actief",alert.freq_once_per_bar_close)
