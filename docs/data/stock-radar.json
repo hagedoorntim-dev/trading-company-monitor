@@ -1,10 +1,71 @@
 {
   "version": 1,
-  "generated_at_utc": null,
-  "market_date_ny": null,
-  "source": "StockAnalysis.com",
+  "generated_at_utc": "2026-11-12T14:22:40.292Z",
+  "market_date_ny": "2026-11-12",
+  "source": "StockAnalysis.com (openbare premarket-pagina, geen brokerfeed)",
   "source_url": "https://stockanalysis.com/markets/premarket/",
-  "status": "no_data",
-  "candidates": [],
-  "note": "Nog geen automatische premarket-scan uitgevoerd. Geen marktgegevens beschikbaar."
+  "status": "ok",
+  "candidates": [
+    {
+      "ticker": "LUNR",
+      "name": "Intuitive Machines, Inc.",
+      "direction": "LONG-WATCH",
+      "gap_pct": 14.29,
+      "premarket_price": 13.92,
+      "premarket_volume": 2375031,
+      "market_cap": 2790000000,
+      "tech": false,
+      "score": 70,
+      "signal": "WACHTEN",
+      "spread_verified": false,
+      "news_verified": false,
+      "news": {
+        "headline": "Intuitive Machines jumps as revenue surges past estimates (LUNR:NASDAQ) - Seeking Alpha",
+        "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOYU9Ha2lnRDFHM1hvZVFCVWNuSUNVUWlFcGc3OEtqZVk5ck5iSFFzT2s1S3lBQkxxVEVlSVZoV1huVXdDMDVwajc4ekFsdjlLY0ZtaDVKZXRLWG1sS3RYZjdOYlVNUzFhTE1laTdpbmZMSmY1azctRTFhbmxENW9lbldnMUp2b0tKelRiN0J3MHJNOU5KdU1QNUJmaw?oc=5",
+        "published_at_utc": "2026-11-12T13:15:43.000Z",
+        "verified": false
+      }
+    },
+    {
+      "ticker": "TTEK",
+      "name": "Tetra Tech, Inc.",
+      "direction": "LONG-WATCH",
+      "gap_pct": 10.32,
+      "premarket_price": 41.49,
+      "premarket_volume": 103466,
+      "market_cap": 9630000000,
+      "tech": false,
+      "score": 53,
+      "signal": "WACHTEN",
+      "spread_verified": false,
+      "news_verified": false,
+      "news": {
+        "headline": "Tetra Tech (TTEK) Tops Q4 Earnings and Revenue Estimates - Yahoo Finance",
+        "url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOOG5HakdVbUJOY0dGQUFOQ3Nkekg5a3NYNGhQQXc3TGFpMXdxd29BZUFQdENDQXVuRy1WSzhkaG9IU20ya2pqdk00Nl9KSDdWN25KRUZwZWpDQzZIckFmQUFWc1NNZFd2bkNwQUJQQmxETThoSjZZRzhSZEZHWk51ZlVzT2xYVGk5MmNFSGJ1OHZrQQ?oc=5",
+        "published_at_utc": "2026-11-11T21:20:02.000Z",
+        "verified": false
+      }
+    },
+    {
+      "ticker": "AVEX",
+      "name": "AEVEX Corp.",
+      "direction": "LONG-WATCH",
+      "gap_pct": 10.97,
+      "premarket_price": 13.46,
+      "premarket_volume": 152627,
+      "market_cap": 1540000000,
+      "tech": false,
+      "score": 50,
+      "signal": "WACHTEN",
+      "spread_verified": false,
+      "news_verified": false,
+      "news": {
+        "headline": "What AEVEX (AVEX) Said on Its Q3 Earnings Call - Yahoo Finance",
+        "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNeGxINzBzUDhKVTA0V2k2cm1GRU1LbGFycHNkZ0lQSks4VnJaNDMyTjdTNkFDLWJOdDBzZ3YwOGFyV2Nzb0NmNU91d1hFd3dndU10TDBmcFFKUFNaUXBrcUVjcHd6TmQ5bU1JcWVjWWZfRHNlM1hRbjNUTWY0dGJWS2pQWDZGYU52TzJtYVZhWE5WQ2FVUXZR?oc=5",
+        "published_at_utc": "2026-11-12T01:12:00.000Z",
+        "verified": false
+      }
+    }
+  ],
+  "note": "Indicatieve voorbeurswatchlist; spread, nieuwsinhoud en uitvoerbaarheid zijn niet geverifieerd. Geen instapsignalen."
 }
