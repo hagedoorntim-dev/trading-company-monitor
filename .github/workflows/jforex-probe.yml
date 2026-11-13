@@ -1,0 +1,44 @@
+name: JForex read-only bronproef
+on:
+  workflow_dispatch:
+    inputs:
+      connect:
+        description: "Test demo connection (requires repository secrets)"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'jforex-probe/**'
+      - '.github/workflows/jforex-probe.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile official SDK probe
+        run: mvn -B -f jforex-probe/pom.xml -DskipTests compile
+      - name: Demo connection (no prices or credentials published)
+        if: github.event_name == 'workflow_dispatch' && inputs.connect
+        env:
+          JF_DEMO_USER: ${{ secrets.JF_DEMO_USER }}
+          JF_DEMO_PASSWORD: ${{ secrets.JF_DEMO_PASSWORD }}
+        shell: bash
+        run: |
+          if [ -z "$JF_DEMO_USER" ] || [ -z "$JF_DEMO_PASSWORD" ]; then
+            echo "::error::Missing JForex demo secrets"; exit 1
+          fi
+          OUT=$(mktemp)
+          trap 'rm -f "$OUT"' EXIT
+          if timeout 420 mvn -B -q -f jforex-probe/pom.xml org.codehaus.mojo:exec-maven-plugin:3.5.0:java -Dexec.mainClass=tradingcompany.Probe >"$OUT" 2>&1 && grep -q '^PASS: three consecutive fresh' "$OUT"; then
+            echo "PASS: three consecutive fresh XAUUSD M1 BID/ASK pairs; research only"
+          else
+            echo "::error::JForex demo probe failed or timed out. No raw SDK logs published."; exit 1
+          fi
