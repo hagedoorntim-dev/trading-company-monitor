@@ -135,6 +135,7 @@ showAA = input.bool(true,"Toon grote AlgoAlpha-achtige pijlen",group="Weergave")
 showReject = input.bool(false,"Toon afwijsreden bij elke grote pijl (labels)",group="Weergave")
 showLines = input.bool(true,"Toon EMA50 en HMA50",group="Weergave")
 showDurationTable = input.bool(false,"Toon 10 historische trendlengtes (vergelijking)",group="Weergave")
+showLab = input.bool(true,"Toon Performance Lab (vervangt vergelijkingstabel)",group="Research Lab")
 why = not isM1?"H1 ATR-hulp / M1 vereist":not barstate.isconfirmed?"Kaars nog open":d==0?"Geen grote pijl":d*(close-e)<=0?"EMA50 verkeerde kant":t5!=d?"M5 niet bevestigd":hs!=d?"HMA niet bevestigd":not strong?"Kaars niet sterk":na(rv)?"Volume onbekend":rv<1.5?"Volume < 1,5":na(rel)?"ATR-referentie ontbreekt":rel<1?"ATR < 1x":rel>3?"ATR > 3x":na(er)?"ER20 onbekend / gat":er<0.30?"ER20 < 0,30":not quoteOK?"Brokerquote / contract onbekend":spread>0.5*a?"Spread > 0,5 ATR":not covered or not calendarFresh?"Kalender onbekend":news or manualPause?"Nieuwsblokkade":qty<minOz?"Risico / minimumpositie":freeMargin<=0 or qty*close*0.05/fx>freeMargin?"Vrije margin onvoldoende":3*a<minStop?"Stopafstand te klein":"PAPER KANDIDAAT"
 var string lastDecision = "Nog geen grote pijl"
 var int lastSignalAt = na
@@ -191,7 +192,7 @@ plotshape(tech and d==1,title="B2 technische kandidaat long",style=shape.triangl
 plotshape(tech and d==-1,title="B2 technische kandidaat short",style=shape.triangledown,location=location.abovebar,color=color.new(color.red,25),size=size.small,text="B2?")
 plotshape(eligible and d==1,title="Paper LONG",style=shape.labelup,location=location.belowbar,color=color.green,text="P LONG",size=size.small)
 plotshape(eligible and d==-1,title="Paper SHORT",style=shape.labeldown,location=location.abovebar,color=color.maroon,text="P SHORT",size=size.small)
-var table tb=table.new(position.top_right,2,42,border_width=1)
+var table tb=table.new(position.top_right,2,36,border_width=1)
 f_row(int i,string label,string value) =>
     table.cell(tb,0,i,label,text_color=color.white,bgcolor=color.rgb(24,36,50))
     table.cell(tb,1,i,value,text_color=color.white,bgcolor=color.rgb(35,50,66))
@@ -223,7 +224,7 @@ f_pair(int i) =>
 f_compareCell(int col,int row,string value,color txt) =>
     table.cell(tb,col,row,value,text_color=txt,bgcolor=color.rgb(24,36,50),text_size=size.small)
 if barstate.islast
-    if showDurationTable and isM1
+    if showDurationTable and isM1 and not showLab
         f_compareCell(0,18,"Trend 1–5  ↑ / ↓",color.aqua)
         f_compareCell(1,18,"Trend 6–10  ↑ / ↓",color.aqua)
         for i=0 to 4
@@ -244,11 +245,11 @@ if barstate.isconfirmed and pendingExit!=0
 // Scope is either loaded chart history OR only realtime closed candles since load.
 // Inputs/reload/replay reset Pine state. No permanent external log or confirmed fills.
 // ====================================================================
-showLab = input.bool(true,"Toon Performance Lab",group="Research Lab")
 labMode = input.string("Historie","Onderzoeksmodus",options=["Historie","Live sinds laden"],group="Research Lab")
 labSpread = input.float(1.13,"Proxy spread USD/oz (vast)",minval=0,step=0.01,group="Research Lab")
 labSlip = input.float(0.10,"Proxy slippage USD/oz per kant",minval=0,step=0.01,group="Research Lab")
 labMarks = input.bool(false,"Toon B3-kandidaten op grafiek",group="Research Lab")
+labLogs = input.bool(false,"Schrijf live signalen naar Pine Logs (sessie)",group="Research Lab")
 labStart = input.time(timestamp("13 Nov 2026 00:00 +0000"),"Historie vanaf (UTC)",group="Research Lab")
 labActive = isM1 and barstate.isconfirmed and (labMode=="Historie"?time>=labStart:barstate.isrealtime)
 labCost = labSpread+2*labSlip
@@ -315,6 +316,8 @@ f_finish(int book,float exitPrice) =>
                     array.set(filterWin,k,array.get(filterWin,k)+1)
                 else if pnl<0
                     array.set(filterLoss,k,array.get(filterLoss,k)+1)
+    if labLogs and barstate.isrealtime
+        log.info("LAB EXIT | "+str.tostring(book)+" | "+str.format_time(time_close,"yyyy-MM-dd HH:mm","UTC")+" UTC | proxy USD/oz "+str.tostring(pnl,"0.00"))
     array.set(lbPos,book,0)
     array.set(lbMask,book,-1)
 f_queue(int book,int side,int mask) =>
@@ -359,6 +362,8 @@ if labActive
         labSignals += 1
         bool known = f_known()
         int mask = known?f_mask(d):-1
+        if labLogs and barstate.isrealtime
+            log.info("LAB SIGNAL | "+str.format_time(time_close,"yyyy-MM-dd HH:mm","UTC")+" UTC | "+(d==1?"BUY":"SELL")+" | mask "+str.tostring(mask)+" | M5 "+str.tostring(t5)+" | HMA "+str.tostring(hs)+" | body "+str.tostring(body)+" | edge "+str.tostring(edge)+" | RV "+str.tostring(rv)+" | ATR "+str.tostring(a)+" | relATR "+str.tostring(rel)+" | ER "+str.tostring(er)+" | "+why)
         if not known
             labUnknown += 1
         f_queue(0,d,mask)
@@ -398,39 +403,41 @@ f_filterLine(int k) =>
     str.tostring(array.get(filterN,k))+" | "+str.tostring(array.get(filterWin,k))+"/"+str.tostring(array.get(filterLoss,k))+" | "+f_labMoney(array.get(filterNet,k))
 if barstate.islast
     if showLab and isM1
-        f_compareCell(0,25,"PERFORMANCE LAB",color.aqua)
-        f_compareCell(1,25,labMode,color.aqua)
-        f_compareCell(0,26,"Grote pijlen / onbekend",color.white)
-        f_compareCell(1,26,str.tostring(labSignals)+" / "+str.tostring(labUnknown),color.white)
-        f_compareCell(0,27,"B2 tech / B3 extra",color.white)
-        f_compareCell(1,27,str.tostring(labTechPass)+" / "+str.tostring(labB3Late),color.white)
-        f_compareCell(0,28,"Proxy: aantal | $/oz | PF",color.silver)
-        f_compareCell(1,28,"Kosten "+f_labMoney(labCost)+" $/oz",color.silver)
-        f_compareCell(0,29,"Alle grote pijlen",color.white)
-        f_compareCell(1,29,f_book(0),color.white)
-        f_compareCell(0,30,"B2 technisch (geen broker)",color.white)
-        f_compareCell(1,30,f_book(1),color.white)
-        f_compareCell(0,31,"B3 technisch (max 20m)",color.white)
-        f_compareCell(1,31,f_book(2),color.white)
-        f_compareCell(0,32,"Afwijzingen: n | W/V | $/oz",color.silver)
-        f_compareCell(1,32,"Meerdere per trade mogelijk",color.silver)
-        f_compareCell(0,33,"EMA50",color.white)
-        f_compareCell(1,33,f_filterLine(0),color.white)
-        f_compareCell(0,34,"M5",color.white)
-        f_compareCell(1,34,f_filterLine(1),color.white)
-        f_compareCell(0,35,"HMA",color.white)
-        f_compareCell(1,35,f_filterLine(2),color.white)
-        f_compareCell(0,36,"Sterke kaars",color.white)
-        f_compareCell(1,36,f_filterLine(3),color.white)
-        f_compareCell(0,37,"Volume",color.white)
-        f_compareCell(1,37,f_filterLine(4),color.white)
-        f_compareCell(0,38,"ATR-regime",color.white)
-        f_compareCell(1,38,f_filterLine(5),color.white)
-        f_compareCell(0,39,"ER20",color.white)
-        f_compareCell(1,39,f_filterLine(6),color.white)
-        f_compareCell(0,40,"Gat: gecensureerd AA/B2/B3",color.silver)
-        f_compareCell(1,40,str.tostring(array.get(lbCensored,0))+"/"+str.tostring(array.get(lbCensored,1))+"/"+str.tostring(array.get(lbCensored,2)),color.silver)
-        f_compareCell(0,41,"Sinds (NL) / geen opslag",color.silver)
-        f_compareCell(1,41,na(labFirst)?"—":str.format_time(labFirst,"dd-MM HH:mm","Europe/Amsterdam"),color.silver)
+        f_compareCell(0,18,"PERFORMANCE LAB",color.aqua)
+        f_compareCell(1,18,labMode,color.aqua)
+        f_compareCell(0,19,"Grote pijlen / onbekend",color.white)
+        f_compareCell(1,19,str.tostring(labSignals)+" / "+str.tostring(labUnknown),color.white)
+        f_compareCell(0,20,"B2 tech / B3 extra",color.white)
+        f_compareCell(1,20,str.tostring(labTechPass)+" / "+str.tostring(labB3Late),color.white)
+        f_compareCell(0,21,"Proxy: aantal | $/oz | PF",color.silver)
+        f_compareCell(1,21,"Kosten "+f_labMoney(labCost)+" $/oz",color.silver)
+        f_compareCell(0,22,"Alle grote pijlen",color.white)
+        f_compareCell(1,22,f_book(0),color.white)
+        f_compareCell(0,23,"B2 technisch (geen broker)",color.white)
+        f_compareCell(1,23,f_book(1),color.white)
+        f_compareCell(0,24,"B3 technisch (max 20m)",color.white)
+        f_compareCell(1,24,f_book(2),color.white)
+        f_compareCell(0,25,"Afwijzingen: n | W/V | $/oz",color.silver)
+        f_compareCell(1,25,"Meerdere per trade mogelijk",color.silver)
+        f_compareCell(0,26,"EMA50",color.white)
+        f_compareCell(1,26,f_filterLine(0),color.white)
+        f_compareCell(0,27,"M5",color.white)
+        f_compareCell(1,27,f_filterLine(1),color.white)
+        f_compareCell(0,28,"HMA",color.white)
+        f_compareCell(1,28,f_filterLine(2),color.white)
+        f_compareCell(0,29,"Sterke kaars",color.white)
+        f_compareCell(1,29,f_filterLine(3),color.white)
+        f_compareCell(0,30,"Volume",color.white)
+        f_compareCell(1,30,f_filterLine(4),color.white)
+        f_compareCell(0,31,"ATR-regime",color.white)
+        f_compareCell(1,31,f_filterLine(5),color.white)
+        f_compareCell(0,32,"ER20",color.white)
+        f_compareCell(1,32,f_filterLine(6),color.white)
+        f_compareCell(0,33,"Gat: gecensureerd AA/B2/B3",color.silver)
+        f_compareCell(1,33,str.tostring(array.get(lbCensored,0))+"/"+str.tostring(array.get(lbCensored,1))+"/"+str.tostring(array.get(lbCensored,2)),color.silver)
+        f_compareCell(0,34,"Sinds (NL) / geen opslag",color.silver)
+        f_compareCell(1,34,na(labFirst)?"—":str.format_time(labFirst,"dd-MM HH:mm","Europe/Amsterdam"),color.silver)
+        f_compareCell(0,35,"DD afgesloten AA/B2/B3",color.silver)
+        f_compareCell(1,35,f_labMoney(array.get(lbDD,0))+"/"+f_labMoney(array.get(lbDD,1))+"/"+f_labMoney(array.get(lbDD,2)),color.silver)
     else
-        table.clear(tb,0,25,1,41)
+        table.clear(tb,0,25,1,35)
