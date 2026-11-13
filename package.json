@@ -6,7 +6,9 @@
   "scripts": {
     "update": "node scripts/update_data.mjs",
     "test": "node --test tests/*.test.mjs",
-    "update:indicative": "node scripts/update_indicative.mjs"
+    "update:indicative": "node scripts/update_indicative.mjs",
+    "live:m1": "node scripts/live_m1.mjs",
+    "probe:m1": "node scripts/probe_m1.mjs"
   },
   "dependencies": {
     "dukascopy-node": "1.50.0"
