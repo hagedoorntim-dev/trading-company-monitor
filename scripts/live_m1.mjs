@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url)), dir=path.resolve(proce
 const port=Number(process.env.TC_PORT||8787), seed=process.env.TC_SEED;
 const archive=path.join(dir,'bars'), log=path.join(dir,'signals.jsonl'), stateFile=path.join(dir,'state.json');
 await fs.mkdir(archive,{recursive:true});
-let bars=new Map(),seen=new Set(),signals=[],lastPoll=null,sourceError=null,lastOK=null,lastAnalysis=null,started=Date.now(),busy=false,backfillAttempt=0,conflicts=0;
+let bars=new Map(),seen=new Set(),signals=[],lastPoll=null,sourceError=null,lastOK=null,lastAnalysis=null,started=Date.now(),busy=false,backfillAttempt=0,conflicts=0,historyWarning=null;
 const iso=t=>new Date(t).toISOString(),day=t=>iso(t).slice(0,10),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const read=async p=>{try{return await fs.readFile(p,'utf8')}catch(e){if(e.code==='ENOENT')return '';throw e}};
 const parseLines=s=>s.split(/\r?\n/).filter(Boolean).map(l=>JSON.parse(l));
@@ -46,19 +46,24 @@ async function fetchPair(recent,from,to){
  return pair(b,a,Date.now());
 }
 async function saveStatus(){
- const data={source:'Dukascopy XAUUSD (niet Plus500)',mode:'research',started_at:iso(started),last_poll_at:lastPoll?iso(lastPoll):null,last_success_at:lastOK?iso(lastOK):null,source_error:sourceError,stored_bars:bars.size,conflicts,analysis:lastAnalysis,execution:'WACHTEN'};
+ const data={source:'Dukascopy XAUUSD (niet Plus500)',mode:'research',started_at:iso(started),last_poll_at:lastPoll?iso(lastPoll):null,last_success_at:lastOK?iso(lastOK):null,source_error:sourceError,stored_bars:bars.size,conflicts,history_warning:historyWarning,analysis:lastAnalysis,execution:'WACHTEN'};
  await fs.writeFile(stateFile+'.tmp',JSON.stringify(data));await fs.rename(stateFile+'.tmp',stateFile);
  return data;
 }
 async function poll(){
  if(busy)return;busy=true;lastPoll=Date.now();
  try{
-  const newest=ordered().at(-1)?.t;
+  const before=ordered(),newest=before.at(-1)?.t;
+  // A gap in weekdays is a coverage warning, not a fabricated candle.
+  const gap=before.find((x,i)=>i>0&&x.t-before[i-1].t>3*3600000&&x.t-before[i-1].t<72*3600000&&new Date(x.t).getUTCDay()>=1&&new Date(x.t).getUTCDay()<=5&&new Date(before[i-1].t).getUTCDay()>=1&&new Date(before[i-1].t).getUTCDay()<=5);
+  const gapPrev=gap?before[before.indexOf(gap)-1].t:null;
+  const missing=gapPrev!==null?gapPrev+MIN:(!newest||Date.now()-newest>3*3600000?newest?newest+MIN:Date.now()-45*86400000:null);
+  historyWarning=missing!==null?"Historische aanvulling nodig; controleer bron en handelskalender":null;
   // Seed recommended. Bootstrap at most one bounded historical request per hour, not per poll.
-  if((!newest||Date.now()-newest>3*3600000)&&Date.now()-backfillAttempt>3600000){
+  if(missing!==null&&Date.now()-backfillAttempt>3600000){
    backfillAttempt=Date.now();
-   const from=newest?Math.max(newest+MIN,Date.now()-45*86400000):Date.now()-45*86400000;
-   const to=Math.min(Date.now(),from+7*86400000);
+   const from=Math.max(missing,Date.now()-55*86400000);
+   const to=Math.min(Date.now(),gap?gap.t:from+7*86400000);
    try{await add(await fetchPair(false,from,to))}catch(e){console.warn("Backfill failed",e.message)}
   }
   const recent=await fetchPair(true);
@@ -73,7 +78,7 @@ async function poll(){
   if(x.t>prev&&x.t+MIN>=started&&lastAnalysis.direction){
    const id='B2-v8:'+x.t, a=lastAnalysis;
    if(!seen.has(id)){
-    const event={id,version:'B2-v8',observed_at:iso(now),bar_close_utc:a.bar_close_utc,direction:a.direction,technical_candidate:a.technical_candidate,eligible:false,reason:'Broker/nieuws niet geverifieerd; onderzoek',gap_minutes:prev?Math.max(0,(x.t-prev)/MIN-1):null,features:a};
+    const event={id,version:'B2-v8',observed_at:iso(now),bar_close_utc:a.bar_close_utc,direction:a.direction,technical_candidate:a.technical_candidate&&!historyWarning,history_warning:historyWarning,eligible:false,reason:'Broker/nieuws niet geverifieerd; onderzoek',gap_minutes:prev?Math.max(0,(x.t-prev)/MIN-1):null,features:a};
     await fs.appendFile(log,JSON.stringify(event)+'\n');seen.add(id);signals.push(event);signals=signals.slice(-500);
    }
   }
@@ -87,7 +92,7 @@ http.createServer(async(req,res)=>{
   if(req.method!=='GET'){res.writeHead(405);res.end();return}
   if(u.pathname==='/api/m1/status'){
    const a=lastAnalysis,age=a?.bar_close_utc?Date.now()-Date.parse(a.bar_close_utc):null;
-   res.setHeader('Content-Type','application/json');res.end(JSON.stringify({source:'Dukascopy XAUUSD (niet Plus500)',execution:'WACHTEN',started_at:iso(started),last_poll_at:lastPoll?iso(lastPoll):null,last_success_at:lastOK?iso(lastOK):null,source_error:sourceError,stored_bars:bars.size,conflicts,analysis:a,age_ms:age,live_fresh:!sourceError&&age!==null&&age>=3000&&age<=90000}));return
+   res.setHeader('Content-Type','application/json');res.end(JSON.stringify({source:'Dukascopy XAUUSD (niet Plus500)',execution:'WACHTEN',started_at:iso(started),last_poll_at:lastPoll?iso(lastPoll):null,last_success_at:lastOK?iso(lastOK):null,source_error:sourceError,stored_bars:bars.size,conflicts,history_warning:historyWarning,analysis:a,age_ms:age,live_fresh:!sourceError&&age!==null&&age>=3000&&age<=90000}));return
   }
   if(u.pathname==='/api/m1/signals'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(signals));return}
   const docs=path.join(root,'docs'),file=path.resolve(docs,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));
