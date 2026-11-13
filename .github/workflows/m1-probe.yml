@@ -1,0 +1,24 @@
+name: M1 bronproef (eenmalig)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m1-probe.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - name: Check collector and dashboard syntax
+        run: node --check scripts/live_m1.mjs && node --check docs/live-m1.js
+      - name: Probe fresh paired M1
+        run: npm run probe:m1
