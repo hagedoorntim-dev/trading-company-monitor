@@ -1,0 +1,1 @@
+signal_id,signal_close_utc,received_utc,direction,tv_close_usd_oz,signal_atr_usd_oz,decision,skip_reason,check_utc,plus500_bid,plus500_ask,spread_usd_oz,eurusd,quantity_oz,planned_risk_eur,entry_utc,entry_fill,stop_price,exit_utc,exit_fill,exit_reason,net_demo_eur,notes
