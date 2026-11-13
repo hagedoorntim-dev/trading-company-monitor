@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/m1-probe.yml'
+      - 'scripts/probe_m1.mjs'
 permissions:
   contents: read
 jobs:
