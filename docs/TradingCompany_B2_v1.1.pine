@@ -1,0 +1,209 @@
+//@version=6
+indicator("Trading Company | B2 Regime Momentum v1.1", overlay=true, max_labels_count=500)
+// Research only. Chart volume is NOT Dukascopy bid+ask volume; verify parity before forward testing.
+// Source: AlgoAlpha-style ZLEMA bands (70, 1.2); HMA(50)/3 approximation from v8.
+// M1 = detector; H1 = ATR-reference helper (no signals on H1).
+isM1 = timeframe.in_seconds() == 60
+f_trend() =>
+    z = ta.ema(close + (close - close[34]), 70)
+    b = ta.highest(ta.atr(70), 210) * 1.2
+    var int t = 0
+    if ta.crossover(close, z + b)
+        t := 1
+    if ta.crossunder(close, z - b)
+        t := -1
+    t
+f_prev() =>
+    t = f_trend()
+    t[1]
+t1 = f_trend()
+t5 = request.security(syminfo.tickerid, "5", f_prev(), lookahead=barmerge.lookahead_on)
+d = isM1 and t1 != 0 and t1 != t1[1] ? t1 : 0
+e = ta.ema(close, 50)
+h = ta.hma(close, 50)
+var int hs = 0
+if h > h[1] and h > h[2] and h > h[3]
+    hs := 1
+else if h < h[1] and h < h[2] and h < h[3]
+    hs := -1
+a = ta.atr(14)
+r = high-low
+body = r > 0 ? math.abs(close-open)/r : 0
+edge = r > 0 ? (d == 1 ? (high-close)/r : (close-low)/r) : 1
+strong = body >= 0.50 and d*(close-open)>0 and edge<=0.20
+rv = volume / ta.sma(volume[1], 20)
+path = math.sum(math.abs(ta.change(close)), 20)
+er = path>0 and time-time[20]==20*60000 ? math.abs(close-close[20])/path : na
+// ATR reference: median of daily medians, last 20 earlier UTC dates >=600 active M1 bars.
+// Process PREVIOUS bar only; no partial current day or partial first day.
+// Request more M1 history than the displayed chart; availability is provider/plan dependent.
+// On H1 this same M1 request is a lower-timeframe calculation; copy its scalar value if M1 lacks history.
+f_ref() =>
+    var array<float> daySamples = array.new_float()
+    var array<float> dayMedians = array.new_float()
+    var bool firstDay = true
+    var int lastDay = na
+    var int refDay = na
+    ar = ta.atr(14)
+    ud = int(math.floor(time / 86400000))
+    prevDay = ud[1]
+    if not na(prevDay)
+        if not na(ar[1]) and close[1]>0 and not na(volume[1]) and volume[1]>0
+            array.push(daySamples, ar[1]/close[1]*10000)
+        if ud != prevDay
+            if not firstDay and array.size(daySamples)>=600
+                array.push(dayMedians,array.median(daySamples))
+                if array.size(dayMedians)>20
+                    array.shift(dayMedians)
+                lastDay := prevDay
+            firstDay := false
+            array.clear(daySamples)
+            refDay := ud
+    [array.size(dayMedians)==20?array.median(dayMedians):na, array.size(dayMedians), refDay, lastDay]
+[autoRef, autoDays, autoDay, lastCompleteDay] = request.security(syminfo.tickerid,"1",f_ref(),lookahead=barmerge.lookahead_off,calc_bars_count=50000)
+manualRef = input.float(0.0,"ATR-referentie (basispunten; H1-hulp)",minval=0,step=0.000001,group="ATR-referentie")
+manualDay = input.time(timestamp("01 Jan 2020 00:00 +0000"),"UTC-datum van referentie (zelfde dag)",group="ATR-referentie")
+manualChecked = input.bool(false,"H1-referentie van dezelfde koersbron gecontroleerd",group="ATR-referentie")
+utcDay = int(math.floor(time/86400000))
+manualOK = manualChecked and manualRef>0 and int(math.floor(manualDay/86400000))==utcDay
+autoOK = not na(autoRef) and autoRef>0 and autoDays==20 and autoDay==utcDay
+ref = autoOK?autoRef:manualOK?manualRef:na
+rel = a/close*10000/ref
+// Trend duration: same HMA50/3 direction as v1.0; rolling mean of 10 completed
+// runs in the same direction. Do not count first partial run or runs cut by >3h gaps.
+var array<int> bullLengths = array.new_int()
+var array<int> bearLengths = array.new_int()
+var int trendAge = 0
+var bool observedStart = false
+var float forecast = na
+if barstate.isconfirmed and isM1
+    gap = not na(time[1]) and time-time[1]>10800000
+    if gap or hs==0
+        trendAge := hs==0?0:1
+        observedStart := false
+        forecast := na
+    else if hs!=hs[1]
+        if observedStart and trendAge>0
+            if hs[1]==1
+                array.push(bullLengths,trendAge)
+                if array.size(bullLengths)>10
+                    array.shift(bullLengths)
+            else if hs[1]==-1
+                array.push(bearLengths,trendAge)
+                if array.size(bearLengths)>10
+                    array.shift(bearLengths)
+        trendAge := 1
+        observedStart := hs[1]!=0
+        forecast := hs==1 and array.size(bullLengths)==10?array.avg(bullLengths):hs==-1 and array.size(bearLengths)==10?array.avg(bearLengths):na
+    else
+        trendAge += 1
+// Explicit verified spread snapshot from selected broker. No fake historical spread.
+spread = input.float(0.0,"BID/ASK spread USD per oz (actueel)",minval=0,step=0.01,group="Broker")
+spreadAt = input.time(timestamp("01 Jan 2020 00:00 +0000"),"Tijdstip gemeten spread",group="Broker")
+minOz = input.float(0.15,"Minimum ounces",minval=0.01,step=0.01,group="Broker")
+stepOz = input.float(0.15,"Stap ounces",minval=0.01,step=0.01,group="Broker")
+fx = input.float(0.0,"Actuele EUR/USD (USD per EUR)",minval=0,step=0.0001,group="Broker")
+verified = input.bool(false,"Brokercontract, quote en volume-bron gecontroleerd",group="Broker")
+freeMargin = input.float(0.0,"Actuele vrije margin EUR (5% goudmarge)",minval=0,group="Broker")
+minStop = input.float(0.0,"Minimale stopafstand USD/oz (broker)",minval=0,group="Broker")
+risk = input.float(5.0,"Gepland risico EUR",minval=0.1,maxval=5,group="Broker")
+slip = input.float(0.10,"Stop-slippage USD/oz",minval=0,step=0.01,group="Broker")
+fees = input.float(0.0,"Extra commissie retour USD (totale order)",minval=0,group="Broker")
+manualPause = input.bool(false,"Pauze bij onverwacht nieuws",group="Nieuws")
+// Calendar snapshot verified 12 Nov 2026, valid only 13 Nov–31 Dec. Recheck before session.
+calendarChecked = input.bool(false,"Kalender vandaag opnieuw gecontroleerd",group="Nieuws")
+calendarAt = input.time(timestamp("01 Jan 2020 00:00 +0000"),"Tijdstip kalendercontrole",group="Nieuws")
+f_window(int ev) =>
+    time_close>=ev-5*60000 and time_close<=ev+15*60000
+news = f_window(timestamp("America/New_York",2026,12,4,8,30)) or f_window(timestamp("America/New_York",2026,12,9,14,0)) or f_window(timestamp("America/New_York",2026,12,9,14,30)) or f_window(timestamp("America/New_York",2026,12,10,8,30))
+covered = time_close>=timestamp("13 Nov 2026 00:00 +0000") and time_close<timestamp("01 Jan 2027 00:00 +0000")
+calendarFresh = calendarChecked and time_close>=calendarAt and time_close-calendarAt<=86400000
+quoteOK = spread>0 and fx>0 and time_close>=spreadAt and time_close-spreadAt<=5*60000 and verified
+planned = 3*a+slip+spread
+qty = quoteOK and planned>0 ? math.floor(math.min(1.0,math.max(0,risk*fx-fees)/planned)/stepOz)*stepOz : 0.0
+tech = isM1 and barstate.isconfirmed and d!=0 and d*(close-e)>0 and t5==d and hs==d and strong and rv>=1.5 and rel>=1 and rel<=3 and er>=0.30
+eligible = tech and quoteOK and spread<=0.5*a and covered and calendarFresh and not news and not manualPause and qty>=minOz and freeMargin>0 and qty*close*0.05/fx<=freeMargin and 3*a>=minStop
+// Visual settings and explicit first failing gate (only closed signal candles).
+showAA = input.bool(true,"Toon grote AlgoAlpha-achtige pijlen",group="Weergave")
+showReject = input.bool(false,"Toon afwijsreden bij elke grote pijl (labels)",group="Weergave")
+showLines = input.bool(true,"Toon EMA50 en HMA50",group="Weergave")
+why = not isM1?"H1 ATR-hulp / M1 vereist":not barstate.isconfirmed?"Kaars nog open":d==0?"Geen grote pijl":d*(close-e)<=0?"EMA50 verkeerde kant":t5!=d?"M5 niet bevestigd":hs!=d?"HMA niet bevestigd":not strong?"Kaars niet sterk":na(rv)?"Volume onbekend":rv<1.5?"Volume < 1,5":na(rel)?"ATR-referentie ontbreekt":rel<1?"ATR < 1x":rel>3?"ATR > 3x":na(er)?"ER20 onbekend / gat":er<0.30?"ER20 < 0,30":not quoteOK?"Brokerquote / contract onbekend":spread>0.5*a?"Spread > 0,5 ATR":not covered or not calendarFresh?"Kalender onbekend":news or manualPause?"Nieuwsblokkade":qty<minOz?"Risico / minimumpositie":freeMargin<=0 or qty*close*0.05/fx>freeMargin?"Vrije margin onvoldoende":3*a<minStop?"Stopafstand te klein":"PAPER KANDIDAAT"
+var string lastDecision = "Nog geen grote pijl"
+var int lastSignalAt = na
+if isM1 and barstate.isconfirmed and d!=0
+    lastDecision := (d==1?"BUY: ":"SELL: ")+why
+    lastSignalAt := time_close
+    if showReject and not eligible
+        label.new(bar_index,d==1?low:high,lastDecision,style=d==1?label.style_label_up:label.style_label_down,color=color.new(color.gray,20),textcolor=color.white,size=size.tiny)
+// Research position state: pending entry on next M1 open; chart OHLC proxy, NOT executable bid/ask fills.
+// If a stop is crossed in the same bar, conservatively model it as hit; no actual order.
+var int paperPos = 0
+var int pending = 0
+var int pendingExit = 0
+var float pendingATR = na
+var float paperStop = na
+var float paperQty = na
+var float entryProxy = na
+bool opened = false
+bool closed = false
+if barstate.isconfirmed
+    if paperPos != 0 and pendingExit != 0
+        paperPos := 0
+        pendingExit := 0
+        paperStop := na
+        closed := true
+    if pending != 0 and paperPos == 0
+        // Reject missing next minute rather than assume a gap fill.
+        if time-time[1]==60000
+            paperPos := pending
+            entryProxy := open
+            paperStop := open-paperPos*3*pendingATR
+            opened := true
+        pending := 0
+    if paperPos != 0 and (paperPos==1 ? low<=paperStop : high>=paperStop)
+        paperPos := 0
+        paperStop := na
+        closed := true
+    if paperPos != 0 and d==-paperPos
+        pendingExit := 1
+    if eligible and (paperPos==0 or pendingExit!=0)
+        pending := d
+        pendingATR := a
+        paperQty := qty
+plot(paperPos!=0?paperStop:na,"Paper ATR-stop (OHLC proxy)",color=color.yellow,style=plot.style_linebr)
+plotshape(closed,title="Paper EXIT proxy",style=shape.xcross,location=location.abovebar,color=color.yellow,size=size.tiny)
+plotshape(opened,title="Paper entry next candle proxy",style=shape.circle,location=location.belowbar,color=color.blue,size=size.tiny)
+// Mark technical candidates separately from validated PAPER eligibility. No live orders or P&L claims.
+plot(isM1 and showLines?e:na,"EMA50",color=color.orange)
+plot(isM1 and showLines?h:na,"HMA50 (benadering)",color=hs==1?color.teal:color.red)
+plotshape(showAA and isM1 and barstate.isconfirmed and d==1,title="Grote AA-achtige BUY",style=shape.labelup,location=location.belowbar,color=color.teal,text="BUY",textcolor=color.white,size=size.small)
+plotshape(showAA and isM1 and barstate.isconfirmed and d==-1,title="Grote AA-achtige SELL",style=shape.labeldown,location=location.abovebar,color=color.red,text="SELL",textcolor=color.white,size=size.small)
+plotshape(tech and d==1,title="B2 technische kandidaat long",style=shape.triangleup,location=location.belowbar,color=color.new(color.teal,25),size=size.small,text="B2?")
+plotshape(tech and d==-1,title="B2 technische kandidaat short",style=shape.triangledown,location=location.abovebar,color=color.new(color.red,25),size=size.small,text="B2?")
+plotshape(eligible and d==1,title="Paper LONG",style=shape.labelup,location=location.belowbar,color=color.green,text="P LONG",size=size.small)
+plotshape(eligible and d==-1,title="Paper SHORT",style=shape.labeldown,location=location.abovebar,color=color.maroon,text="P SHORT",size=size.small)
+var table tb=table.new(position.top_right,2,16,border_width=1)
+f_row(int i,string label,string value) =>
+    table.cell(tb,0,i,label,text_color=color.white,bgcolor=color.rgb(24,36,50))
+    table.cell(tb,1,i,value,text_color=color.white,bgcolor=color.rgb(35,50,66))
+if barstate.islast
+    f_row(0,"B2 v1.1 | onderzoek",not isM1?"ATR HULP":eligible?"PAPER KANDIDAAT":"WACHTEN")
+    f_row(1,"Huidige reden",why)
+    f_row(2,"Laatste grote pijl",lastDecision)
+    f_row(3,"Tijd laatste pijl",na(lastSignalAt)?"—":str.format_time(lastSignalAt,"dd-MM HH:mm","Europe/Amsterdam"))
+    f_row(4,"M5 / HMA",isM1?str.tostring(t5)+" / "+str.tostring(hs):"M1 vereist")
+    f_row(5,"Trendduur / schatting",isM1?str.tostring(trendAge)+" / "+(na(forecast)?"—":str.tostring(forecast,"0.0"))+" candles":"M1 vereist")
+    f_row(6,"Body / rand",isM1?str.tostring(body,"0.00")+" / "+(d==0?"—":str.tostring(edge,"0.00")):"—")
+    f_row(7,"Relatief volume",isM1?str.tostring(rv,"0.00"):"—")
+    f_row(8,"ATR / normaal",isM1 and not na(rel)?str.tostring(rel,"0.00"):"—")
+    f_row(9,"Ref. (bp) / dagen",not na(autoRef)?str.tostring(autoRef,"0.000000")+" / "+str.tostring(autoDays):manualOK?str.tostring(manualRef,"0.000000")+" / handmatig":"— / "+str.tostring(autoDays))
+    f_row(10,"Ref. UTC-datum",not na(autoDay)?str.format_time(autoDay*86400000,"yyyy-MM-dd","UTC"):"—")
+    f_row(11,"Ref. bron",autoOK?"M1 automatisch":manualOK?"H1 handmatig":"Onvoldoende M1 historie")
+    f_row(12,"ER20",isM1?str.tostring(er,"0.00"):"—")
+    f_row(13,"Spread / ATR",isM1 and quoteOK?str.tostring(spread/a,"0.00"):"ONBEKEND")
+    f_row(14,"Nieuws / positie oz",not covered or not calendarFresh?"ONBEKEND":news or manualPause?"BLOK":"Vrij"+" / "+(quoteOK?str.tostring(qty,"0.00"):"—"))
+    f_row(15,"Bronpariteit","HMA/volume nog te valideren")
+if eligible and pending != 0
+    alert("B2 PAPER | "+syminfo.ticker+" | "+(d==1?"LONG":"SHORT")+" | oz "+str.tostring(qty)+" | ATR "+str.tostring(a)+" | volgende M1 open controleren; geen order",alert.freq_once_per_bar_close)
+if barstate.isconfirmed and pendingExit!=0
+    alert("B2 EXIT CHECK | "+syminfo.ticker+" | grote pijl "+(d==1?"BUY":"SELL")+" | sluit tegengestelde paperpositie op volgende M1; stop blijft actief",alert.freq_once_per_bar_close)
