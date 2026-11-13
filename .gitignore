@@ -1,0 +1,6 @@
+
+# Private live market data, account info and warm-up seed
+private-live/
+*.seed.csv
+.env
+node_modules/
