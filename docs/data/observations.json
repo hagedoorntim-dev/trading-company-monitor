@@ -33,8 +33,14 @@
     "m5trend": "MIXED",
     "h1trend": "MIXED",
     "reason": "5m en 1h geven geen eensgezinde trend",
-    "state": "pending",
-    "evaluation": null,
+    "state": "evaluated",
+    "evaluation": {
+      "at_utc": "2026-11-17T13:25:00.000Z",
+      "end_close": 3855.264,
+      "move_usd_per_oz": -7.939,
+      "directional_move_usd_per_oz": null,
+      "note": "Alleen koersverandering, zonder uitvoerbaarheid, spread, slippage en financieringskosten."
+    },
     "disclaimer": "Prospectieve OHLC-koersmeting; geen BID/ASK-trade of netto-P&L."
   }
 ]
