@@ -222,7 +222,7 @@ f_pair(int i) =>
     string dn = i<array.size(bearLengths)?str.tostring(array.get(bearLengths,i)):"—"
     str.tostring(i+1)+":  "+up+" / "+dn
 f_compareCell(int col,int row,string value,color txt) =>
-    table.cell(tb,col,row,value,text_color=txt,bgcolor=color.rgb(24,36,50),text_size=size.small)
+    table.cell(tb,col,row,value,text_color=txt,bgcolor=color.rgb(24,36,50),text_size=size.normal)
 if barstate.islast
     if showDurationTable and isM1 and not showLab
         f_compareCell(0,18,"Trend 1–5  ↑ / ↓",color.aqua)
