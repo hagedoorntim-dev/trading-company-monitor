@@ -253,11 +253,12 @@ bool testPulse = liveClose and not testSent
 if testPulse
     testSent := true
 // Standalone read-only registration. No keys or orders are embedded in Pine.
-// If TTC JSON is enabled, route this *separate* TV alert to Cloudflare; disable Notify in App.
-f_ttcRecord(string sig) =>
+// One TV alert delivers a JSON payload to Cloudflare AND a phone notification.
+// The first JSON field 'melding' contains the original Dutch human-readable B2 message.
+f_ttcRecord(string sig, string notificationText) =>
     string bt = str.format_time(time_close,"yyyy-MM-dd'T'HH:mm:ss'Z'","UTC")
     string st = str.format_time(timenow,"yyyy-MM-dd'T'HH:mm:ss'Z'","UTC")
-    '{"schema":1,"strategy":"B2","version":"1.3.1-observe","symbol":"'+syminfo.tickerid+'","tf":"1","signal":"'+sig+'","barTime":"'+bt+'","sentTime":"'+st+'","price":'+str.tostring(close,format.mintick)+'}'
+    '{"melding":"'+notificationText+'","schema":1,"strategy":"B2","version":"1.3.1-observe","symbol":"'+syminfo.tickerid+'","tf":"1","signal":"'+sig+'","barTime":"'+bt+'","sentTime":"'+st+'","price":'+str.tostring(close,format.mintick)+'}'
 alertcondition(testPulse,title="TEST | eenmalige push",message="TRADING COMPANY TEST | {{ticker}} M1 | {{time}} UTC | GEEN handel. Pushverbinding controleren.")
 // Independent backup conditions for a known actual demo position. Select separately;
 // no technical filters here: the opposite large arrow is the original B2 exit rule.
@@ -272,7 +273,7 @@ if liveClose and enablePush
         alertWatchDir := 0
         alertWatchAt := na
         if ttcInboxJSON
-            alert(f_ttcRecord("EXIT"),alert.freq_all)
+            alert(f_ttcRecord("EXIT",msg),alert.freq_all)
     if candidate
         string direction = d==1?"BUY":"SELL"
         string stamp = str.format_time(time_close,"dd-MM HH:mm:ss","Europe/Amsterdam")
@@ -283,7 +284,7 @@ if liveClose and enablePush
         alertWatchDir := d
         alertWatchAt := time_close
         if ttcInboxJSON
-            alert(f_ttcRecord(direction),alert.freq_all)
+            alert(f_ttcRecord(direction,entryMsg),alert.freq_all)
     if str.length(msg)>0 and not ttcInboxJSON
         alert(msg,alert.freq_once_per_bar_close)
 
