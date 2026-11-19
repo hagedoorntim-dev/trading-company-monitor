@@ -55,8 +55,14 @@
     "m5trend": "DOWN",
     "h1trend": "DOWN",
     "reason": "Beide tijdframes bevestigen EMA20/50-trend; uitsluitend onderzoeksrichting.",
-    "state": "pending",
-    "evaluation": null,
+    "state": "evaluated",
+    "evaluation": {
+      "at_utc": "2026-11-19T13:20:00.000Z",
+      "end_close": 3714.2,
+      "move_usd_per_oz": -1.979,
+      "directional_move_usd_per_oz": 1.979,
+      "note": "Alleen koersverandering, zonder uitvoerbaarheid, spread, slippage en financieringskosten."
+    },
     "disclaimer": "Prospectieve OHLC-koersmeting; geen BID/ASK-trade of netto-P&L."
   }
 ]
