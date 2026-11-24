@@ -1,48 +1,28 @@
 {
   "version": 1,
-  "generated_at_utc": "2026-11-18T14:25:52.133Z",
-  "market_date_ny": "2026-11-18",
+  "generated_at_utc": "2026-11-24T13:52:11.203Z",
+  "market_date_ny": "2026-11-24",
   "source": "StockAnalysis.com (openbare premarket-pagina, geen brokerfeed)",
   "source_url": "https://stockanalysis.com/markets/premarket/",
   "status": "ok",
   "candidates": [
     {
-      "ticker": "GLBE",
-      "name": "Global-E Online Ltd.",
-      "direction": "SHORT-WATCH",
-      "gap_pct": -13.06,
-      "premarket_price": 34.61,
-      "premarket_volume": 122957,
-      "market_cap": 6690000000,
+      "ticker": "INSM",
+      "name": "Insmed Incorporated",
+      "direction": "LONG-WATCH",
+      "gap_pct": 14.44,
+      "premarket_price": 170.62,
+      "premarket_volume": 81614,
+      "market_cap": 32710000000,
       "tech": false,
-      "score": 54,
+      "score": 49,
       "signal": "WACHTEN",
       "spread_verified": false,
       "news_verified": false,
       "news": {
-        "headline": "Global-E Online Ltd. 2026 Q3 - Results - Earnings Call Presentation (NASDAQ:GLBE) 2026-11-18 - Seeking Alpha",
-        "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNbGExWUxrRERxQzNSODh1MkV2Mk9BUkZZX1VCbm1qQnFfc1FDV1ZIdEtDV19hX0E5SXBZM3VBVFZsOWZIQnhqN2xQNTRzd0FnUVBuTGtJeWxBSWN2QThILW9qVjRIVU9Wbml6WXJoVEkzVmZ5bUo0V1I2QkJXWGkzazFDZU1FMHVOQnJrMTAxVXIxS3B4a05FanRuNXRpZWZCc3JTdGQ5M1lDbTV5MFVXMkFrNGhua3hxREVZVHNRdkJFU3pQ?oc=5",
-        "published_at_utc": "2026-11-18T14:05:12.000Z",
-        "verified": false
-      }
-    },
-    {
-      "ticker": "ARDT",
-      "name": "Ardent Health, Inc.",
-      "direction": "SHORT-WATCH",
-      "gap_pct": -19.16,
-      "premarket_price": 14.35,
-      "premarket_volume": 68557,
-      "market_cap": 2500000000,
-      "tech": false,
-      "score": 51,
-      "signal": "WACHTEN",
-      "spread_verified": false,
-      "news_verified": false,
-      "news": {
-        "headline": "ARDT Nov 2026 15.000 put (ARDT261120P00015000) interactive stock chart - Yahoo Finance UK",
-        "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9HZ0liSDQ1UHVzUjlNNkVWaFM4cW5HVF9zVTlQMHRyRm5GeVRaYXdQTmlZckVhZ1o4RXNoODVzbTRyTzNGOE4tNFV1Z2loRmlFX0djWEVSOUF1WmtlYktZNmNkbktReXNBU3pZc0RB?oc=5",
-        "published_at_utc": "2026-11-17T16:13:23.000Z",
+        "headline": "Can Earnings Beat Change The Case For Navitas Stock - Yahoo Finance",
+        "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPeUdaZF8zMzV0akJvLWxKTm9lT1Z0TERwQ3J1YktTN1VKeFJCMUoySk1wOFZQOXRFbWszMzRSYldUWFlWYkQ0NjFMUXA2ZVJtTWFSSnNSSTlIYmRhV2g0STdCeTRCckdBTks0b0d4dktvY3RCTWdwYXFDRVJZVjdBdjlvQzhFdWhYdW1rMmRPNTFEeHhEdXctS1lXcUxMdWs?oc=5",
+        "published_at_utc": "2026-11-24T12:15:47.000Z",
         "verified": false
       }
     }
