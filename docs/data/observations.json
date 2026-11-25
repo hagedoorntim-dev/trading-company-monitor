@@ -64,5 +64,21 @@
       "note": "Alleen koersverandering, zonder uitvoerbaarheid, spread, slippage en financieringskosten."
     },
     "disclaimer": "Prospectieve OHLC-koersmeting; geen BID/ASK-trade of netto-P&L."
+  },
+  {
+    "id": "xau-2026-11-25",
+    "date": "2026-11-25",
+    "observed_at_utc": "2026-11-25T12:21:57.851Z",
+    "model": "tc-ema20-ema50-mtf-indicative-v1",
+    "signal": "WACHTEN",
+    "price_close": 3521.0125,
+    "last_m5_close_utc": "2026-11-25T12:20:00.000Z",
+    "last_h1_close_utc": "2026-11-25T12:00:00.000Z",
+    "m5trend": "MIXED",
+    "h1trend": "DOWN",
+    "reason": "5m en 1h geven geen eensgezinde trend",
+    "state": "pending",
+    "evaluation": null,
+    "disclaimer": "Prospectieve OHLC-koersmeting; geen BID/ASK-trade of netto-P&L."
   }
 ]
