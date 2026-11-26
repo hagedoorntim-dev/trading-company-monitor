@@ -1,31 +1,10 @@
 {
   "version": 1,
-  "generated_at_utc": "2026-11-24T13:52:11.203Z",
-  "market_date_ny": "2026-11-24",
+  "generated_at_utc": "2026-11-26T14:03:28.511Z",
+  "market_date_ny": "2026-11-26",
   "source": "StockAnalysis.com (openbare premarket-pagina, geen brokerfeed)",
   "source_url": "https://stockanalysis.com/markets/premarket/",
-  "status": "ok",
-  "candidates": [
-    {
-      "ticker": "INSM",
-      "name": "Insmed Incorporated",
-      "direction": "LONG-WATCH",
-      "gap_pct": 14.44,
-      "premarket_price": 170.62,
-      "premarket_volume": 81614,
-      "market_cap": 32710000000,
-      "tech": false,
-      "score": 49,
-      "signal": "WACHTEN",
-      "spread_verified": false,
-      "news_verified": false,
-      "news": {
-        "headline": "Can Earnings Beat Change The Case For Navitas Stock - Yahoo Finance",
-        "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPeUdaZF8zMzV0akJvLWxKTm9lT1Z0TERwQ3J1YktTN1VKeFJCMUoySk1wOFZQOXRFbWszMzRSYldUWFlWYkQ0NjFMUXA2ZVJtTWFSSnNSSTlIYmRhV2g0STdCeTRCckdBTks0b0d4dktvY3RCTWdwYXFDRVJZVjdBdjlvQzhFdWhYdW1rMmRPNTFEeHhEdXctS1lXcUxMdWs?oc=5",
-        "published_at_utc": "2026-11-24T12:15:47.000Z",
-        "verified": false
-      }
-    }
-  ],
-  "note": "Indicatieve voorbeurswatchlist; spread, nieuwsinhoud en uitvoerbaarheid zijn niet geverifieerd. Geen instapsignalen."
+  "status": "no_data",
+  "candidates": [],
+  "note": "Automatische scan kon niet betrouwbaar worden uitgevoerd: Datum premarket-bron komt niet overeen met handelsdag 2026-11-26"
 }
