@@ -1,10 +1,51 @@
 {
   "version": 1,
-  "generated_at_utc": "2026-11-26T14:03:28.511Z",
-  "market_date_ny": "2026-11-26",
+  "generated_at_utc": "2026-11-27T14:03:08.479Z",
+  "market_date_ny": "2026-11-27",
   "source": "StockAnalysis.com (openbare premarket-pagina, geen brokerfeed)",
   "source_url": "https://stockanalysis.com/markets/premarket/",
-  "status": "no_data",
-  "candidates": [],
-  "note": "Automatische scan kon niet betrouwbaar worden uitgevoerd: Datum premarket-bron komt niet overeen met handelsdag 2026-11-26"
+  "status": "ok",
+  "candidates": [
+    {
+      "ticker": "XP",
+      "name": "XP Inc.",
+      "direction": "LONG-WATCH",
+      "gap_pct": 18,
+      "premarket_price": 16.98,
+      "premarket_volume": 1132298,
+      "market_cap": 7260000000,
+      "tech": false,
+      "score": 66,
+      "signal": "WACHTEN",
+      "spread_verified": false,
+      "news_verified": false,
+      "news": {
+        "headline": "XP Stock Earnings Beat And Dividend Declaration What's Changed - Simply Wall St",
+        "url": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQSlNwX3Q1RFRRTkhwRHdXaDFRUU4tRzgwOWRwTFlGQWliZWNSa20ta2Z3TXVPUDJlQUdheWRuRi1ZcVkxMk03WDBmTzBUS1NTdjctT3BIcnZYODUxVE5Ick40aFo0MEcySms5R2NKTmlUMVlTcGpDZ1VqdWp4ZTdldV9LcV9mMU95YkllVmxNYVJiNlVOY0FWOUh1a0RkeFhrbGxsVXIyR0NwamNzekdEXzJTSFFoOURTbmpJaFo2Z0I4WmE1UHQxX0NKa1V2Z9IB0wFBVV95cUxPcURPRDZINHllOWVaQTc5LW1ZY05Eb29wMVBoX1dkX1kyRGVuemNjZUJpR19Da0lzRkRZZlFLNWpSQWZKM0RUSk12WndJQnhLNXc3QWpyWGlNWUp5QW1vaXh5OUtRbWFUNjllM0pVM0FuWlFmYVVrRjREdEg2aHJRaEZXY1R5NkF2a19wM1o5SFJlQ1VMNXl5VnhhUTVnR01rZ21MNGktbmI1NEpETkdWaDlzMUVuMm5lU1Zqa0pXTkItYTg3V0p1eVVzLVkzQXRrTlBz?oc=5",
+        "published_at_utc": "2026-11-26T01:13:32.000Z",
+        "verified": false
+      }
+    },
+    {
+      "ticker": "ITUB",
+      "name": "Itaú Unibanco Holding S.A.",
+      "direction": "LONG-WATCH",
+      "gap_pct": 14.54,
+      "premarket_price": 7.88,
+      "premarket_volume": 337347,
+      "market_cap": 85250000000,
+      "tech": false,
+      "score": 59,
+      "signal": "WACHTEN",
+      "spread_verified": false,
+      "news_verified": false,
+      "news": {
+        "headline": "ITUB Dec 2026 5.000 put (ITUB261218P00005000) stock price, news, quote and history - Yahoo Finance UK",
+        "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE01T0tRblIzeGdkM1NuTmtvanBvZzZPSzlFTnFsMjVMRFZNVE9LNFEzM0UwdEdDdm1DOHNxell4N0lkMndPdHV5MElLM01fMEloN0EwSUc5aGZlYzNxRGhUY0RrYW1nZw?oc=5",
+        "published_at_utc": "2026-11-25T15:08:46.000Z",
+        "verified": false
+      }
+    }
+  ],
+  "note": "Indicatieve voorbeurswatchlist; spread, nieuwsinhoud en uitvoerbaarheid zijn niet geverifieerd. Geen instapsignalen."
 }
